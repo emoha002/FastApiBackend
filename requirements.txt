@@ -1,0 +1,6 @@
+fastapi[all]
+python-dotenv
+pytest
+SQLAlchemy==2.0.19
+asyncpg
+gevent==21.12.0
