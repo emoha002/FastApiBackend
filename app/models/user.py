@@ -9,7 +9,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(50), unique=True, index=True)
-    hashed_password: Mapped[str] = mapped_column(String(50), nullable=False)
+    username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(200), nullable=False)
 
     @classmethod
     async def find(cls, db_session: AsyncSession, id: int):
@@ -19,6 +20,18 @@ class User(Base):
         :return:
         """
         stmt = select(cls).where(cls.id == id)
+        result = await db_session.execute(stmt)
+        instance: User | None = result.scalars().first()
+        return instance
+
+    @classmethod
+    async def find_by_username(cls, db_session: AsyncSession, username: str):
+        """
+        :param db_session:
+        :param name:
+        :return:
+        """
+        stmt = select(cls).where(cls.username == username)
         result = await db_session.execute(stmt)
         instance: User | None = result.scalars().first()
         return instance
