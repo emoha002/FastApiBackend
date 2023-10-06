@@ -13,12 +13,9 @@ async def shutdown_event():
 
 @app.on_event("startup")
 async def startup_event():
-    # async with engine.begin() as conn:
-    #     await conn.run_sync(Base.metadata.create_all)
-
     fast_api_logger.info("Starting up...")
 
 
 @app.get("/")
 async def home():
-    return "hello world backend started"
+    return "backend service started"

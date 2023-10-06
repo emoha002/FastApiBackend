@@ -14,6 +14,9 @@ from app.schemas.user_schema import User as user_schema, UserCreate
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
+from starlette.config import Config
+from authlib.integrations.starlette_client import OAuth
+
 
 users_router = APIRouter(
     prefix="/auth",
@@ -22,7 +25,42 @@ users_router = APIRouter(
 )
 
 
+GOOGLE_CLIENT_ID: str = (
+    "21769266753-efgv1d16v6h3diujg0rmrpaqod0u5ks1.apps.googleusercontent.com"
+)
+
+
+GOOGLE_CLIENT_SECRET: str = "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"
+
+
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="./api_v1/auth/login")
+
+# Set up oauth
+config_data = {
+    "GOOGLE_CLIENT_ID": GOOGLE_CLIENT_ID,
+    "GOOGLE_CLIENT_SECRET": GOOGLE_CLIENT_SECRET,
+}
+starlette_config = Config(environ=config_data)
+oauth = OAuth(starlette_config)
+oauth.register(
+    name="google",
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+
+@users_router.post(
+    "/add_user",
+    response_model=user_schema,
+)
+async def create_user(
+    user: Annotated[UserCreate, Body()], db_session: AsyncSession = Depends(get_db)
+):
+    db_user = await crud.get_user_by_username(db_session, username=user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="username has already been taken")
+
+    return await crud.create_user(db_session=db_session, user=user)
 
 
 @users_router.post("/login")
@@ -45,7 +83,7 @@ async def login(
     access_token = crud.create_access_token(
         data=user_pydentic.model_dump(), expires_delta=access_token_expire_date
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user": user_pydentic}
 
 
 def get_current_user(token: Annotated[str, Depends(oauth2_schema)]):
@@ -65,43 +103,9 @@ def get_current_user(token: Annotated[str, Depends(oauth2_schema)]):
         return credentials_exception
 
 
-@users_router.get("/user/me", response_model=user_schema)
-async def list2(user: Annotated[User, Depends(get_current_user)]):
-    return user
-
-
-@users_router.get("/")
-async def read_items(request: Request, db_session: AsyncSession = Depends(get_db)):
-    print(request)
-    user = User(email="abel@a2sv.org", hashed_password="123")
-
-    await user.save(db_session)
-    # name: str = "".join(random.sample(string.ascii_lowercase, 4))
-
-    # print("send the response")
-    # logger = request.state.logger
-    # logger.debug(f"save user {name}")
-    return [{"username": "name"}, {"username": "name"}]
-
-
-@users_router.post(
-    "/add_user",
-    response_model=user_schema,
-)
-async def create_user(
-    user: Annotated[UserCreate, Body()], db_session: AsyncSession = Depends(get_db)
-):
-    db_user = await crud.get_user_by_username(db_session, username=user.username)
-    if db_user:
-        raise HTTPException(status_code=400, detail="username has already been taken")
-
-    return await crud.create_user(db_session=db_session, user=user)
-
-
-# @app.get("/users/", response_model=list[schemas.User])
-# def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-#     users = crud.get_users(db, skip=skip, limit=limit)
-#     return users
+@users_router.get("/user/me", response_model=None)
+async def my_account(token: Annotated[str, Depends(oauth2_schema)]):
+    return token
 
 
 @users_router.get("/users/{user_id}", response_model=user_schema)

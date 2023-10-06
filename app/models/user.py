@@ -1,7 +1,10 @@
+from enum import unique
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, select, Integer
 from app.models.base import Base
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.schemas.user_schema import UserCreate
 
 
 class User(Base):
@@ -10,6 +13,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    fullname: Mapped[str] = mapped_column(String(50), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(200), nullable=False)
 
     @classmethod

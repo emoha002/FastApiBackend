@@ -7,18 +7,19 @@ services:
     container_name: FastAPI-Backend 
     build: .
     command: bash -c "
-        alembic upgrade heads &&
-        uvicorn main:app --host 0.0.0.0 --port 8000 --lifespan=on --loop uvloop --http httptools --reload
+      alembic upgrade heads &&
+      uvicorn main:app --host 0.0.0.0 --port 8000 --lifespan=on --loop uvloop --http httptools --reload
       "
+
     volumes:
       - .:/app
     ports:
-      - 8009:8000
+      - 8000:8000
     depends_on:
       - db
   db:
     image: postgres:15-alpine
-    container_name: PostgresDB
+    container_name: FastPostgresDB
     restart: always
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/

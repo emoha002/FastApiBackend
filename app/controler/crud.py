@@ -74,7 +74,10 @@ def get_users(db: AsyncSession, skip: int = 0, limit: int = 100):
 async def create_user(db_session: AsyncSession, user: UserCreate):
     hashed_password = hash_password(user.password)
     db_user = User(
-        email=user.email, username=user.username, hashed_password=hashed_password
+        email=user.email,
+        username=user.username,
+        fullname=user.fullname,
+        hashed_password=hashed_password,
     )
     await db_user.save(db_session)
     return db_user
