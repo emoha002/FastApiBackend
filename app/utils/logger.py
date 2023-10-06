@@ -1,5 +1,8 @@
 import logging
+import os
 
+# Ensure the directory exists
+os.makedirs('logs', exist_ok=True)
 
 def log_creator(logger_name: str) -> logging.Logger:
 
