@@ -7,7 +7,7 @@ load_dotenv(dotenv_path=".env")
 
 
 class Config(BaseSettings):
-    POSTGRESS_URL: str = os.environ.get("DATABASE_URL", '')
+    POSTGRESS_URL: str = os.environ.get("DATABASE_URL", 'postgresql+asyncpg://root:123456789@host.docker.internal:5455/program')
     CONFIG_TYPE: str = ""
 
 
