@@ -1,7 +1,6 @@
-from app.models.base import Base
 from config import initial_config as config
 from app import create_app, fast_api_logger
-from app.database import engine
+
 
 app = create_app(config)
 

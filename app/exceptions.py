@@ -9,11 +9,19 @@ class BadRequestHTTPException(HTTPException):
         )
 
 
+class UnprocessableEntityHTTPException(HTTPException):
+    def __init__(self, msg: str):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=msg if msg else "Unprocessable Entity",
+        )
+
+
 class AuthFailedHTTPException(HTTPException):
-    def __init__(self):
+    def __init__(self, msg: str | None):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            detail=msg if msg else "Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

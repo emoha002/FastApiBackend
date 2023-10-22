@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from asyncpg import UniqueViolationError
-from sqlalchemy import MetaData
 
 
 class Base(DeclarativeBase):

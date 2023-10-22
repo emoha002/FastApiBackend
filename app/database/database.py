@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 
-from .utils.logger import sqlalchemy_logger as logger
+from app.utils.logger import sqlalchemy_logger as logger
 from config import initial_config as config
 
 
@@ -14,7 +14,7 @@ engine = create_async_engine(
     max_overflow=20,
 )
 
-AsyncSessionFactory = async_sessionmaker(
+AsyncSessionFactory: async_sessionmaker = async_sessionmaker(
     engine, autoflush=False, expire_on_commit=False, class_=AsyncSession
 )
 

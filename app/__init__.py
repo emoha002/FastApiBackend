@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from config import Config
-from app.routers import api_v1_router
+from app.routers.api_v1 import api_v1_router
 from app.utils.logger import fast_api_logger
 
 
