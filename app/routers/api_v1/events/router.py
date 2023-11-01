@@ -18,6 +18,7 @@ from app.routers.api_v1.events.schemas import (
 )
 from app.routers.api_v1.events.service import (
     create_new_event,
+    delete_reccurent_event,
     get_all_events_by_range,
     update_reccurent_event,
 )
@@ -119,9 +120,9 @@ async def update_event(
     "/update/occurance/{event_occurance_id}",
 )
 async def update_occurance(
+    event_occurance_id: uuid.UUID,
     action: Actions = Body(),
     occurance_data: OccuranceBaseSchema = Body(),
-    event_occurance_id: uuid.UUID = uuid.uuid4(),
     user: User = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db),
 ):
@@ -129,13 +130,26 @@ async def update_occurance(
         db_session=db_session,
         action=action,
         occurance_data=occurance_data,
-        occurernce_id=event_occurance_id,
+        occurrence_id=event_occurance_id,
         user=user,
     )
-    return {"messa": "done"}
-    # db_event_occurance: EventOccurrence = await EventOccurrence.get_by_occurance_id(
-    #     db_session,
-    #     event_occurance_id,
-    #     user,
-    # )
-    # await db_event_occurance.update(db=db_session, **event_object.model_dump())
+    return {"success": True, "message": "Event updated successfully"}
+
+
+@event_router.delete(
+    "/delete/occurance/{event_occurance_id}",
+    response_model=dict[str, str],
+)
+async def delete_occurance(
+    event_occurance_id: uuid.UUID,
+    action: Actions = Body(embed=True),
+    user: User = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db),
+):
+    await delete_reccurent_event(
+        db_session=db_session,
+        occurrence_id=event_occurance_id,
+        user=user,
+        action=action,
+    )
+    return {"status": "success", "message": "Event deleted successfully"}

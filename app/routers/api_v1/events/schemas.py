@@ -26,7 +26,7 @@ class Day(Enum):
 
 class Actions(Enum):
     THIS_EVENT = "This event"
-    THIS_AND_FOLLOWING_EVENTS = "Following Events"
+    THIS_AND_FOLLOWING_EVENTS = "Following events"
     ALL_EVENTS = "All events"
 
 
