@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import and_
+from sqlalchemy import and_, delete
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,10 @@ from sqlalchemy.orm.properties import ForeignKey
 from sqlalchemy import String, select
 from app.database.base import Base
 from app.routers.api_v1.auth.models import User
-from app.routers.api_v1.events.exceptions import EventOccuranceNotFoundHTTPException
+from app.routers.api_v1.events.exceptions import (
+    EventOccuranceNotFoundHTTPException,
+    CalendarEventNotFoundHTTPException,
+)
 
 
 class CalendarEvent(Base):
@@ -40,12 +43,39 @@ class CalendarEvent(Base):
         passive_deletes=True,
     )
 
-    # async def get_all_events_by_range(
-    #     user: User,
-    #     date_range: DateRangeGetEvent,
-    # ):
-    #     return 10
-    #     pass
+    @classmethod
+    async def delete_event_by_event_id(
+        cls, db_session: AsyncSession, event_id: uuid.UUID, user: User
+    ):
+        query = delete(cls).where(
+            and_(
+                cls.event_id == event_id,
+                cls.user_id == user.id,
+            )
+        )
+        result = await db_session.execute(query)
+        await db_session.commit()
+        affected_rows = result.rowcount
+        if affected_rows == 0:
+            raise CalendarEventNotFoundHTTPException
+        # if not instance:
+        return affected_rows
+
+    @classmethod
+    async def get_event_by_event_id(
+        cls, db_session: AsyncSession, event_id: uuid.UUID, user: User
+    ):
+        query = select(cls).where(
+            and_(
+                cls.event_id == event_id,
+                cls.user_id == user.id,
+            )
+        )
+        result = await db_session.execute(query)
+        instance: CalendarEvent | None = result.scalars().one_or_none()
+        if not instance:
+            raise CalendarEventNotFoundHTTPException
+        return instance
 
 
 class EventOccurrence(Base):

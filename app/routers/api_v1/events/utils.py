@@ -14,3 +14,7 @@ def get_previous_sunday():
         return today
     last_sun = today - datetime.timedelta(days=idx + 1)
     return last_sun
+
+
+def get_time_from_datetime(dt: datetime.datetime):
+    return dt.strftime("%H:%M:%S")

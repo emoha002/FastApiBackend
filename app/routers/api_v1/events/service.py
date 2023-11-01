@@ -1,14 +1,21 @@
 from datetime import datetime, timedelta
-from sqlalchemy import and_
+import uuid
+from sqlalchemy import and_, update
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.routers.api_v1.auth.models import User
+from app.routers.api_v1.events.exceptions import EventOccuranceNotFoundHTTPException
 from app.routers.api_v1.events.models import CalendarEvent, EventOccurrence
 
-from app.routers.api_v1.events.schemas import DateRangeGetEvent, EventCreateSchema
+from app.routers.api_v1.events.schemas import (
+    Actions,
+    DateRangeGetEvent,
+    EventCreateSchema,
+    OccuranceBaseSchema,
+)
 from app.utils.utils import get_day_index
 
 
@@ -105,3 +112,54 @@ async def get_all_events_by_range(
     result = await db_session.execute(query)
     db_calendar_events: list[EventOccurrence] = list(result.scalars().all())
     return db_calendar_events
+
+
+async def update_reccurent_event(
+    db_session: AsyncSession,
+    action: Actions,
+    occurance_data: OccuranceBaseSchema,
+    occurernce_id: uuid.UUID,
+    user: User,
+):
+    # FIXME add validation to the timespamp
+
+    subquery = select(EventOccurrence.occurrence_id).join(
+        CalendarEvent, CalendarEvent.event_id == EventOccurrence.event_id
+    )
+
+    if action == Actions.THIS_EVENT:
+        subquery = subquery.where(
+            and_(
+                EventOccurrence.occurrence_id == occurernce_id,
+                CalendarEvent.user_id == user.id,
+            )
+        )
+    else:
+        subquery = subquery.where(
+            and_(
+                CalendarEvent.user_id == user.id,
+            )
+        )
+
+    query = update(EventOccurrence)
+
+    # If this and future is the one that is selected
+    if action == Actions.THIS_AND_FOLLOWING_EVENTS:
+        query = query.where(
+            EventOccurrence.start_time
+            >= (
+                select(EventOccurrence.start_time).where(
+                    EventOccurrence.occurrence_id == occurernce_id
+                )
+            )
+        )
+
+    query = query.where(EventOccurrence.occurrence_id.in_(subquery)).values(
+        occurance_data.get_json
+    )
+
+    affected_rows = await db_session.execute(query)
+    await db_session.commit()
+
+    if affected_rows.rowcount == 0:
+        raise EventOccuranceNotFoundHTTPException

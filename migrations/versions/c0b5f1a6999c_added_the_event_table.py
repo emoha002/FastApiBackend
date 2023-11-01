@@ -45,6 +45,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["event_id"],
             ["calendar_event.event_id"],
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("occurrence_id"),
     )
