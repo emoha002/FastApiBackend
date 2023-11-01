@@ -20,7 +20,10 @@ async def get_current_user(
     db_session: AsyncSession = Depends(get_db),
 ) -> User:
     try:
-        payload: dict[str, Any] = jwt.decode(token, SECRET_KEY)
+        try:
+            payload: dict[str, Any] = jwt.decode(token, SECRET_KEY)
+        except Exception:
+            raise TOKEN_EXPIRED
         if has_time_passed(payload["exp"]):
             raise TOKEN_EXPIRED
 
@@ -28,9 +31,9 @@ async def get_current_user(
         if not user:
             raise INVALID_CREDENTIAL
         return user
-    except Exception as e:
+    except Exception:
         await db_session.rollback()
-        raise e
+        raise INVALID_CREDENTIAL
 
 
 async def get_current_active_user(

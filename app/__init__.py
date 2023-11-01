@@ -10,9 +10,10 @@ async def logger_middleware(request: Request, call_next):
     return response
 
 
-def create_app(config: Config) -> FastAPI:
+def create_app(config: Config, lifespan) -> FastAPI:
     fast_api_logger.info(f"App started as {config.CONFIG_TYPE}")
-    app = FastAPI()
+    app = FastAPI(title="Scheduling Project", lifespan=lifespan)
     app.include_router(api_v1_router)
     app.middleware("http")(logger_middleware)
+
     return app

@@ -37,5 +37,3 @@ def get_settings(config_type: str = os.environ.get("CONFIG", "dev")) -> Config:
 
 
 initial_config = get_settings()
-print(initial_config.POSTGRESS_URL)
-print(initial_config.CONFIG_TYPE)

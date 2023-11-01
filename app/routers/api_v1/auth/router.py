@@ -53,12 +53,3 @@ async def sign_in(
 @auth_router.get("/user/me", response_model=UserSchema)
 async def my_account(user: Annotated[User, Depends(get_current_user)]):
     return user
-
-
-# @auth_router.get("/users/{user_id}", response_model=user_schema)
-# async def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
-#     db_user = await crud.get_user(db, user_id=user_id)
-#     print(db_user)
-#     if db_user is None:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     return db_user
