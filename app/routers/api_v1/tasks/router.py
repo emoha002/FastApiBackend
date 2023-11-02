@@ -8,6 +8,7 @@ from app.routers.api_v1.tasks.exceptions import NOTHING_TO_UPDATE
 from app.routers.api_v1.tasks.models import DBTask
 
 from app.routers.api_v1.tasks.schemas import (
+    GetTasksFilterSchema,
     TaskCreateSchema,
     TaskOutSchema,
     UpdateTaskSchema,
@@ -52,12 +53,15 @@ async def get_task(
     )
 
 
-@task_router.get("/get_all_tasks", response_model=list[TaskOutSchema], status_code=200)
+@task_router.post("/get_all_tasks", response_model=list[TaskOutSchema], status_code=200)
 async def get_all_tasks(
+    filter: GetTasksFilterSchema,
     user: User = Depends(get_current_user),
     db_session: AsyncSession = Depends(get_db),
 ):
-    return await DBTask.get_all_my_tasks(db_session=db_session, user=user)
+    return await DBTask.get_all_my_tasks(
+        db_session=db_session, user=user, filter=filter
+    )
 
 
 # update task
@@ -105,7 +109,7 @@ TODO
     - [x] Get task
     - [x] Get all tasks
     - [x] Update task
-    - [ ] Delete task
+    - [x] Delete task
     - [ ] Get all tasks by user
         - query params can be
         - title, state, priority, color, task_deadline

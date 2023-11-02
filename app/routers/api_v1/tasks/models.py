@@ -9,7 +9,13 @@ from sqlalchemy.orm.properties import ForeignKey
 from app.routers.api_v1.auth.models import User
 from app.routers.api_v1.tasks.exceptions import TASK_NOT_FOUND
 
-from app.routers.api_v1.tasks.schemas import TaskState, TaskPriority, TaskColor
+from app.routers.api_v1.tasks.schemas import (
+    GetTasksFilterSchema,
+    OrderBy,
+    TaskState,
+    TaskPriority,
+    TaskColor,
+)
 from app.database.base import Base
 
 
@@ -65,8 +71,30 @@ class DBTask(Base):
         return instance
 
     @classmethod
-    async def get_all_my_tasks(cls, db_session: AsyncSession, user: User):
+    async def get_all_my_tasks(
+        cls, db_session: AsyncSession, user: User, filter: GetTasksFilterSchema
+    ):
         query = select(cls).where(cls.user_id == user.id)
+        if filter.title:
+            query = query.where(cls.title.ilike(f"%{filter.title}%"))
+        if filter.state:
+            query = query.where(cls.state == filter.state)
+        if filter.priority:
+            query = query.where(cls.priority == filter.priority)
+        if filter.color:
+            query = query.where(cls.color == filter.color)
+        if filter.start_time:
+            query = query.where(cls.task_deadline >= filter.start_time)
+        if filter.end_time:
+            query = query.where(cls.task_deadline <= filter.end_time)
+
+        print(filter.order_by)
+        query = (
+            query.order_by(cls.task_deadline.asc())
+            if filter.order_by == OrderBy.ASC
+            else query.order_by(cls.task_deadline.desc())
+        )
+
         result = await db_session.execute(query)
 
         instance: list[DBTask] = list(result.scalars().all())

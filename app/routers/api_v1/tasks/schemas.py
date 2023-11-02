@@ -16,6 +16,11 @@ class TaskPriority(enum.Enum):
     HIGH = "HIGH"
 
 
+class OrderBy(enum.Enum):
+    ASC = "ASC"
+    DESC = "DESC"
+
+
 class TaskColor(enum.Enum):
     RED = "RED"
     GREEN = "GREEN"
@@ -99,3 +104,13 @@ class UpdateTaskSchema(BaseModel):
     priority: TaskPriority | None = None
     color: TaskColor | None = None
     task_deadline: datetime.date | None = None
+
+
+class GetTasksFilterSchema(BaseModel):
+    title: str | None = None
+    state: TaskState | None = None
+    priority: TaskPriority | None = None
+    color: TaskColor | None = None
+    start_time: datetime.date | None = datetime.date.today()
+    end_time: datetime.date | None = datetime.date.today() + datetime.timedelta(days=7)
+    order_by: OrderBy | None = OrderBy.ASC
