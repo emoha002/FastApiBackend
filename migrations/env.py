@@ -7,11 +7,18 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+import alembic_postgresql_enum
+
+
 from app.database.base import Base
 
 from dotenv import load_dotenv
 
 from config import initial_config
+
+# this is to avoid deletion while saving
+c = alembic_postgresql_enum.sql_commands
+
 
 load_dotenv(".env")
 # this is the Alembic Config object, which provides

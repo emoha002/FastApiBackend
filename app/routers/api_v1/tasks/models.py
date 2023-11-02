@@ -1,15 +1,19 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Enum
+from sqlalchemy import String, Enum, select
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm.properties import ForeignKey
+from app.routers.api_v1.auth.models import User
+from app.routers.api_v1.tasks.exceptions import TASK_NOT_FOUND
 
-from app.routers.api_v1.tasks.schemas import TaskState, TaskPriority
+from app.routers.api_v1.tasks.schemas import TaskState, TaskPriority, TaskColor
 from app.database.base import Base
 
 
-class Taks(Base):
+class DBTask(Base):
     __tablename__ = "task"
 
     task_id: Mapped[UUID] = mapped_column(
@@ -20,6 +24,12 @@ class Taks(Base):
         primary_key=True,
     )
 
+    user_id: Mapped["User"] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("user.id"), nullable=False
+    )
+
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+
     description: Mapped[str] = mapped_column(
         String(1000),
         nullable=True,
@@ -28,9 +38,37 @@ class Taks(Base):
         Enum(TaskState),
         nullable=False,
     )
-    task_priority: Mapped[TaskPriority] = mapped_column(
+    priority: Mapped[TaskPriority] = mapped_column(
         Enum(TaskPriority),
         nullable=False,
     )
+    color: Mapped[TaskColor] = mapped_column(
+        Enum(TaskColor),
+        nullable=False,
+    )
+
     task_deadline: Mapped[datetime] = mapped_column(nullable=False)
-    reminder_after: Mapped[datetime] = mapped_column(nullable=False)
+
+    @classmethod
+    async def get_task_by_id(
+        cls, db_session: AsyncSession, task_id: uuid.UUID, user: User
+    ):
+        query = select(cls).where(cls.task_id == task_id, cls.user_id == user.id)
+        print(query)
+        result = await db_session.execute(query)
+
+        instance: DBTask | None = result.scalars().one_or_none()
+
+        if not instance:
+            raise TASK_NOT_FOUND
+
+        return instance
+
+    @classmethod
+    async def get_all_my_tasks(cls, db_session: AsyncSession, user: User):
+        query = select(cls).where(cls.user_id == user.id)
+        result = await db_session.execute(query)
+
+        instance: list[DBTask] = list(result.scalars().all())
+
+        return instance
