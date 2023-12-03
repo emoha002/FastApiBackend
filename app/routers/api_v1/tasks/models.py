@@ -88,7 +88,6 @@ class DBTask(Base):
         if filter.end_time:
             query = query.where(cls.task_deadline <= filter.end_time)
 
-        print(filter.order_by)
         query = (
             query.order_by(cls.task_deadline.asc())
             if filter.order_by == OrderBy.ASC
